@@ -1,0 +1,119 @@
+version: '3'
+services:
+  #########################################################
+  # Core
+  #########################################################
+
+  # PHP
+  php:
+    container_name: php
+    build: .
+    ports:
+      - 9000:9000
+    volumes:
+      - ./:/var/www/html
+      - ./php/log:/var/log
+    environment:
+      XDEBUG_CONFIG: remote_host=172.17.0.1
+    networks:
+      - drupal
+
+  # MYSQL
+  mysql:
+    container_name: mysql
+    image: mariadb:10.4
+    volumes:
+      # - data:/var/lib/mysql
+      - ./.docker/mysql/log:/var/log/mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'drupal'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - 3306:3306
+    networks:
+      - drupal
+
+  # NGINX
+  nginx:
+    container_name: nginx
+    image: nginx:1.17-alpine
+    volumes:
+      - ./:/var/www/html
+      - ./.docker/nginx/conf:/etc/nginx/conf.d
+      - ./.docker/nginx/log:/var/log/nginx
+    ports:
+      - 8000:80
+      - 443:443
+    networks:
+      - drupal
+
+  #########################################################
+  # Extras
+  #########################################################
+
+  # ADMINER
+  # TODO: this can be run off nginx with 'adminer:fastcgi'
+  # adminer:
+  #   container_name: adminer
+  #   image: adminer
+  #   environment:
+  #     ADMINER_DEFAULT_SERVER: drupal
+  #   restart: always
+  #   ports:
+  #     - 8036:8080
+
+  # MAILHOG
+  # mailhog:
+  #   container_name: mailhog
+  #   image: mailhog/mailhog
+  #   restart: always
+  #   ports:
+  #     - 1025:1025
+  #     - 8025:8025
+
+  # REDIS
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - drupal
+  # SOLR
+  solr:
+    container_name: solr
+    image: solr:8-slim
+    ports:
+     - 8983:8983
+    volumes:
+      # - ./.docker/solr/conf:/opt/solr/server/solr/mycores/conf
+      - data:/opt/solr/server/solr/mycores
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - drupal
+    networks:
+      - drupal
+
+  # # PHPREDMIN
+  # phpredmin:
+  #   container_name: phpredmin
+  #   image: sasanrose/phpredmin
+  #   environment:
+  #     - PHPREDMIN_DATABASE_REDIS_0_HOST=redis
+  #   ports:
+  #     - 8080:80
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - drupal
+
+# VOLUMES
+volumes:
+  data:
+  log:
+
+# NETWORKS
+networks:
+  drupal:
