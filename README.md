@@ -1,5 +1,8 @@
 I have been working on and brainstorming what my ideal dev setup might look like. Docker has really pulled me in and I would love to get your input on what you would like to add to a new base image. Any essential PHP extensions or helper apps you guys use that you think would useful to add?
 
+
+
+
 Here are the specs I'm shooting for right now:
 
 # Core services
